@@ -1,21 +1,12 @@
-#Bridging the gap between Cloud Foundry and CloudStack:BOSH CPI Support for CloudStack
-Cloud Foundry is the leading open source PaaS offering with a fast growing ecosystem and strong enterprise demand. One of its advantages which attracts many developers is its consistent model for deploying and running applications across multiple clouds such as AWS, VSphere and Openstack. The approach provides cloud adopters with more choices and flexibilities. Today, NTT Software Innovation Center and College of Software Technology, Zhejiang University, China (ZJU-CST) are glad to announce that we have successfully developed the BOSH CloudStack CPI, which automates the deployment and management process of Cloud Foundry V2 upon CloudStack.
+#BOSH CPI Support for CloudStack
 
-CloudStack is an open source IaaS which is used by a number of service providers to offer public cloud services, and by many companies to provide an on-premises (private) cloud offering, or as part of a hybrid cloud solution. Many enterprises like NTT and BT want to bring Cloud Foundry to CloudStack in an efficient and flexibile way in production environment. Therefore, developing BOSH CloudStack CPI for deploying and operating Cloud Foundry upon CloudStack becomes a logical choice.
+Cloud Foundry is the leading open source PaaS offering with a fast growing ecosystem and strong enterprise demand. One of its advantages which attracts many developers is its consistent model for deploying and running applications across multiple clouds such as AWS, VSphere and OpenStack. The approach provides cloud adopters with more choices and flexibilities. Today, NTT Software Innovation Center and College of Software Technology, Zhejiang University, China (ZJU-CST) are glad to announce that we have successfully developed the BOSH CloudStack CPI, which automates the deployment and management process of Cloud Foundry V2 upon CloudStack.
 
-This work is powered by NTT and ZJU-CST, we have been working together since last November. Thanks to NTT team member [Iwasaki Yudai](https://twitter.com/i_yudai) and ZJU-CST team members [Du Jun](https://github.com/m1093782566) and [Zhang Lei](https://github.com/resouer), the main contributors of this project, who had devoted much of their energies to fixing issues and rising to challenges on the CPI work. In addtion, we would like to appreciate the selfless help received from Pivotal Cloud team and [Nic Williams](http://drnicwilliams.com/).
-
-##Why NTT and ZJU-CST?
-[ZJU-CST](https://github.com/ZJU-SEL) is the biggest software engineering team of Zhejiang University as well as the leading Cloud Computing research institute in China. ZJU-CST started R&D work on Cloud Foundry and CloudStack about 3 years ago, and more recently launched a comprehensive PaaS platform based on Cloud Foundry `V1` serving City Management Department of Hangzhou China. ZJU-CST released BOSH CloudStack CPI for Cloud Foundry V1 last May, and introduced the CPI work at PlatformCF 2013 in Santa Clara, California last September.
-
-NTT, the world's leading telecom company, has been active in fostering the Cloud Foundry developer and user community in Japan. NTT has been contributing to Cloud Foundry for the last two years and sharing its projects such as Memcashd Service, Nise BOSH, a lightweight BOSH emulator and BOSH Autoscaler, with the community. NTT Communicasions, a subsidiary of NTT Group, has been running a public commercial PaaS [Cloud n](http://www.ntt.com/cloudn_e/) with Cloud Foundry since March 2013, and a video about their efforts on Cloud Foundry in building a commercial service with it is available at [the Cloud Foundry Summit 2013 site](http://cfsummit.com/2013).
-
-The decision to work together was motivated in part because ZJU-CST intended to upgrade their previously released CPI  to support Cloud Foundry V2 and NTT wanted to improve their independently developed BOSH CloudStack CPI project so that can be compatible with CloudStack advanced zone.
-
-Xiaohu Yang, Executive Vice Dean of College of Software Technology, Zhejiang University, thought highly of this international collaboration. "It will be a win-win cooperation. Open source projects such as Cloud Foundry can serve as an international platform for education and researching".
+CloudStack is an open source IaaS which is used by a number of service providers to offer public cloud services, and by many companies to provide an on-premises (private) cloud offering, or as part of a hybrid cloud solution. Many enterprises like NTT and BT want to bring Cloud Foundry to CloudStack in an efficient and flexible way in production environment. Therefore, developing BOSH CloudStack CPI for deploying and operating Cloud Foundry upon CloudStack becomes a logical choice.
 
 ##Technical Details
-Since NTT and ZJU-CST developed BOSH CloudStack CPI independently at the beginning, there are many differences in the implementation. Hence, the first step is to merge code repositories of NTT and ZJU-CST into a new repository. We chose to create a new repository in github cloudfoundry-community in order to encourage more developers to join us.
+
+Since NTT and ZJU-CST developed BOSH CloudStack CPI independently at the beginning, there are many differences in the implementation. Hence, the first step is to merge code repositories of NTT and ZJU-CST into a new repository. We chose to create a new repository in [GitHub cloudfoundry-community](https://github.com/cloudfoundry-community/bosh-cloudstack-cpi) in order to encourage more developers to join us.
 
 There are some crucial aspects in the process of refactoring CPI(check out the [wiki](https://github.com/cloudfoundry-community/bosh-cloudstack-cpi/wiki/Difference-between-ZJU-SEL-and-NTT-implementations) if you are interested in digging more differences between NTT and ZJU-CST implementations):
 
@@ -25,10 +16,12 @@ There are some crucial aspects in the process of refactoring CPI(check out the [
 * Fog Support
 
 ### Stemcell Builder
-ZJU-CST used standard Ubuntu10.04 ISO file to build stemcells for both MicroBOSH and BOSH. NTT used Ubuntu10.04 of a backported kernel version due to some compatibility problems in their environment. Unfortunately, aufs, which is essential for warden in Cloud Foundry V2, is missing in the backported kernel. So, we decided to try standard Ubuntu12.04 as the base OS of stemcells for both MicroBOSH and BOSH after brainstorms. We found that, with a minor patch of cf-release, ubuntu12.04 is compatible with BOSH and Cloud Foundry. The patch only modifies the deployment process of Cloud Foundry, so it does not impact Cloud Foundry itself.
+ZJU-CST used standard Ubuntu10.04 ISO file to build [stemcells](http://docs.cloudfoundry.org/bosh/glossary.html#stemcell) for both MicroBOSH and BOSH. NTT used Ubuntu10.04 of a backported kernel version due to some compatibility problems in their environment. Unfortunately, aufs, which is essential for warden in Cloud Foundry V2, is missing in the backported kernel. So, we decided to try standard Ubuntu12.04 as the base OS of stemcells for both MicroBOSH and BOSH after brainstorming together. We found that, with a minor patch of [cf-release](https://github.com/cloudfoundry/cf-release/pull/305#issuecomment-36476767), Ubuntu12.04 is compatible with BOSH and Cloud Foundry. The patch only modifies the deployment process of Cloud Foundry, so it does not impact Cloud Foundry itself. In fact, this issue has been solved since cf-release v160 by updating nginx to 1.4.5.
 
-### Upload Stemcell
-When referring to API call create_stemcell in CPI, ZJU-CST used an extra web server as a entrepot when uploading stemcells, which follows the OpenStack style, but NTT didn't used an extra web server and took the volume route same as AWS pattern.
+
+### Create Stemcell
+When referring to API call create_stemcell in CPI, ZJU-CST used an extra web server as a entrepot to store the stemcell temporarily while uploading, which follows the OpenStack style, but NTT didn't use an extra web server and took the volume route same as AWS pattern.
+Implementation [A]:
 
 Implementation [A]:
 
@@ -60,17 +53,17 @@ Before the collaboration between NTT and ZJU-CST, ZJU-CST worked in CloudStack a
 
 ### Fog Support
 
-Both NTT and ZJU-CST invoked fog gem to send API requests to CloudStack engine. However, APIs of the official fog gem are not rich enough to supporting BOSH Cloudstack CPI. ZJU-CST built a local fog gem which added the missing APIs while NTT made a fog patch with missing APIs in CPI project to work around for the moment. We already have sent a PR to fog and are waiting for it to be merged.
+Both NTT and ZJU-CST invoked fog gem to send API requests to CloudStack engine. However, APIs of the official fog gem are not rich enough to supporting BOSH Cloudstack CPI. ZJU-CST built a local fog gem which added the missing APIs while NTT made a fog patch with missing APIs in CPI project to work around for the moment. We already have sent a [PR](https://github.com/fog/fog/pull/2541) to fog and are waiting for it to be merged.
 
 When refactoring work finished, we started a month-long heavy test. Once a bug was found, the bug finder would open an issue and describe detailed informations about it. Then all of the developers will receive the message about this bug via mail list. Any commit to the code repository would be submitted in the form of pull request and the repository owners would review the set of changes, discuss potential modifications, and even push follow-up commits if necessary. Only if the PR passed CI and BAT can it be merged. Simply put, we followed the workflow of other Cloud Foundry repositories in github such as cf-release and bosh. In this way, we controlled the history of the new repository and no potentially dangerous code could be maxed in.
 
 ##Current Status
 * Finished development and test work.
 * Support both basic zone and advanced zone for CloudStack.
-* Tested on CloudStack `4.0.0` and `4.2.0` with KVM hypervisor.
-* Successfully deployed Cloudfoundry `V2` and had applications running.
-* Support both `Ubuntu10.04` and `Ubuntu12.04` stemcells.
-* Support `Ubuntu14.04` stemcell is in the TODO list.
+* Tested on CloudStack 4.0.0 and 4.2.0 with KVM hypervisor.
+* Successfully deployed Cloudfoundry V2 and had applications running.
+* Support both Ubuntu10.04 and Ubuntu12.04 stemcells.
+* Support Ubuntu14.04 stemcell is in the TODO list.
 * Open sourced and maintained in github.
 
 ## How to Deploy Cloud Foundry on CloudStack
@@ -100,6 +93,18 @@ We recommend Ubuntu 12.04 64bit or later for your inception server. For those wh
 You may find more detailed guide step by step concerning on deploying Cloud Foundry on CloudStack
 [here](https://github.com/cloudfoundry-community/bosh-cloudstack-cpi/blob/master/README.md).
 In fact, the remaining steps are very straightforward and similar with other deployment methods such as AWS, Vsphere and Openstack.
+
+
+##Why NTT and ZJU-CST?
+This work is powered by NTT and ZJU-CST, we have been working together since last November. Thanks to NTT team member [Iwasaki Yudai](https://twitter.com/i_yudai) and ZJU-CST team members [Du Jun](https://github.com/m1093782566) and [Zhang Lei](https://github.com/resouer), the main contributors of this project, who had devoted much of their energies to fixing issues and rising to challenges on the CPI work. In addtion, we would like to appreciate the selfless help received from Pivotal Cloud team and [Nic Williams](http://drnicwilliams.com/).
+
+[ZJU-CST](https://github.com/ZJU-SEL) is the biggest software engineering team of Zhejiang University as well as the leading Cloud Computing research institute in China. ZJU-CST started R&D work on Cloud Foundry and CloudStack about 3 years ago, and more recently launched a comprehensive PaaS platform based on Cloud Foundry `V1` serving City Management Department of Hangzhou China. ZJU-CST released BOSH CloudStack CPI for Cloud Foundry V1 last May, and introduced the CPI work at PlatformCF 2013 in Santa Clara, California last September.
+
+NTT, the world's leading telecom company, has been active in fostering the Cloud Foundry developer and user community in Japan. NTT has been contributing to Cloud Foundry for the last two years and sharing its projects such as Memcashd Service, Nise BOSH, a lightweight BOSH emulator and BOSH Autoscaler, with the community. NTT Communicasions, a subsidiary of NTT Group, has been running a public commercial PaaS [Cloud n](http://www.ntt.com/cloudn_e/) with Cloud Foundry since March 2013, and a video about their efforts on Cloud Foundry in building a commercial service with it is available at [the Cloud Foundry Summit 2013 site](http://cfsummit.com/2013).
+
+The decision to work together was motivated in part because ZJU-CST intended to upgrade their previously released CPI  to support Cloud Foundry V2 and NTT wanted to improve their independently developed BOSH CloudStack CPI project so that can be compatible with CloudStack advanced zone.
+
+Xiaohu Yang, Executive Vice Dean of College of Software Technology, Zhejiang University, thought highly of this international collaboration. "It will be a win-win cooperation. Open source projects such as Cloud Foundry can serve as an international platform for education and researching".
 
 ## Facts and Lessons Learned
 
